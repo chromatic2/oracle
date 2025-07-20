@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COG Solo Oracle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Couleurs principales */
+            --bg-dark: #1a1a2e; /* Fond très sombre */
+            --container-bg: #1f4068; /* Fond des sections */
+            --header-bg: #4c71a3; /* En-têtes bleutés/gris */
+            --title-bg: #142850; /* Bleu foncé pour le titre */
+            --accent-green: #2ecc71; /* Vert d'accentuation */
+            --accent-cyan: #00b894; /* Cyan plus vif */
+            --text-light: #e0e0e0; /* Texte clair */
+            --item-bg: #2d4567; /* Fond des résultats / items */
+            --button-bg: #3c6e71; /* Boutons par défaut */
+            --button-hover-bg: #295d61;
+            --tab-inactive: #4a6fa5; /* Onglet inactif */
+            --tab-active: #00b894; /* Onglet actif */
+            --border-color: #546e88; /* Couleur des bordures */
+            --dice-button-bg: #e67e22; /* Orange pour les dés */
+            --dice-button-hover-bg: #d35400;
+            --card-button-bg: #9b59b6; /* Violet pour les cartes */
+            --card-button-hover-bg: #8e44ad;
+            --tarot-button-bg: #e74c3c; /* Rouge pour le tarot */
+            --tarot-button-hover-bg: #c0392b;
+            --odd-selected-bg: #2ecc71; /* Couleur pour l'option de probabilité sélectionnée */
+            --item-title-color: #f39c12; /* Nouvelle couleur pour les titres d'item */
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif; /* Police lisible pour le corps */
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh; /* Pour que le body prenne toute la hauteur */
+            box-sizing: border-box; /* Inclure padding et border dans la largeur/hauteur */
+        }
+
+        .title {
+            font-family: 'Orbitron', sans-serif; /* Police futuriste pour le titre */
+            font-size: 3.5em; /* Ajusté pour une meilleure proportion */
+            text-align: center;
+            background-color: var(--title-bg);
+            padding: 30px 80px; /* Moins de padding latéral pour les petits écrans */
+            border-radius: 20px; /* Moins rond, plus "tech" */
+            margin-bottom: 40px;
+            font-weight: 700;
+            border: 4px solid var(--border-color);
+            box-shadow: 0 0 20px rgba(0, 184, 148, 0.4), 0 0 10px rgba(0, 0, 0, 0.5); /* Effet de lueur */
+            text-shadow: 0 0 10px rgba(0, 184, 148, 0.6); /* Lueur sur le texte */
+            letter-spacing: 2px; /* Espacement des lettres pour le titre */
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 25px;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            width: 95%; /* Légèrement plus large pour mieux utiliser l'espace */
+            max-width: 900px; /* Augmenté pour l'esthétique */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4), inset 0 0 5px rgba(255, 255, 255, 0.1); /* Ombre et léger effet d'incrustation */
+            border: 1px solid rgba(255, 255, 255, 0.05); /* Bordure très subtile */
+        }
+
+        .header {
+            font-family: 'Orbitron', sans-serif;
+            background-color: var(--header-bg);
+            padding: 12px 15px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 1.3em;
+            color: var(--text-light);
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid var(--accent-green); /* Soulignement vert */
+        }
+
+        .generator-row {
+            display: flex;
+            flex-wrap: wrap; /* Permet aux éléments de passer à la ligne sur petits écrans */
+            justify-content: center; /* Centrage des items */
+            gap: 15px; /* Espace entre les items */
+            margin-bottom: 15px;
+        }
+
+        .generator-item {
+            flex: 1;
+            min-width: 150px; /* Taille minimale pour éviter un écrasement trop fort */
+            padding: 15px;
+            background-color: var(--item-bg);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 500;
+            color: var(--accent-green); /* Couleur d'accentuation pour les résultats */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 0 8px rgba(0, 184, 148, 0.2); /* Léger glow interne */
+        }
+
+        .item-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--item-title-color); /* Nouvelle couleur pour les titres d'item */
+            font-weight: 700;
+            font-size: 0.9em; /* Plus petit que le texte du résultat */
+            margin-bottom: 5px; /* Espacement entre le titre et le contenu */
+            display: block; /* S'assure que le titre prend sa propre ligne */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Ligne de séparation */
+            padding-bottom: 5px;
+        }
+
+        /* Styles spécifiques pour les dés, cartes, tarot */
+        .dice-roller, .card-drawer, .tarot-drawer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+
+        .dice-button {
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.4em;
+            font-weight: bold;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--dice-button-bg);
+        }
+        .dice-button:hover {
+            background-color: var(--dice-button-hover-bg);
+            transform: translateY(-2px);
+        }
+
+        .card-button, .tarot-button {
+            background-color: var(--card-button-bg); /* Default for cards */
+            color: white;
+            border: none;
+            padding: 15px 25px; /* Adjusted padding for rectangular shape */
+            border-radius: 6px; /* Rectangular shape */
+            cursor: pointer;
+            font-size: 1.05em; /* Match other buttons */
+            font-weight: 600; /* Match other buttons */
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+            display: block; /* Ensures they take full width if needed */
+            margin: 0 auto; /* Center the button */
+        }
+
+        .card-button {
+            background-color: var(--card-button-bg);
+        }
+        .card-button:hover {
+            background-color: var(--card-button-hover-bg);
+            transform: translateY(-2px);
+        }
+
+        .tarot-button {
+            background-color: var(--tarot-button-bg);
+        }
+        .tarot-button:hover {
+            background-color: var(--tarot-button-hover-bg);
+            transform: translateY(-2px);
+        }
+
+        .dice-result, .card-result, .tarot-result {
+            margin-top: 10px;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 10px rgba(0, 184, 148, 0.6);
+            padding: 10px;
+            background-color: #283747;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* Styles pour les options de probabilité */
+        .odds-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+
+        .odds-option {
+            background-color: var(--item-bg);
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            white-space: nowrap; /* Empêche le texte de se briser */
+        }
+        .odds-option:hover {
+            background-color: #3b5780;
+        }
+        .odds-option input[type="radio"] {
+            margin-right: 5px;
+        }
+        .odds-option.selected {
+            background-color: var(--odd-selected-bg);
+            color: var(--bg-dark);
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+        }
+
+        button {
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: block; /* Chaque bouton prend sa propre ligne */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        button:hover {
+            background-color: var(--button-hover-bg);
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center; /* Centrer les onglets */
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 5px; /* Espacement entre les onglets */
+        }
+        .tab-button {
+            background-color: var(--tab-inactive);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0; /* Coins supérieurs arrondis */
+            transition: background-color 0.2s ease, color 0.2s ease;
+            font-weight: 600;
+        }
+        .tab-button:hover:not(.active) {
+            background-color: #6c8cae; /* Léger éclaircissement au survol */
+        }
+        .tab-button.active {
+            background-color: var(--tab-active);
+            color: var(--bg-dark); /* Texte sombre sur l'onglet actif pour le contraste */
+            font-weight: 700;
+            border-bottom: 2px solid var(--accent-green); /* Soulignement vert sur l'onglet actif */
+            box-shadow: 0 -4px 8px rgba(0, 184, 148, 0.3); /* Lueur sur l'onglet actif */
+        }
+        .tab-content {
+            display: none;
+            padding-top: 10px; /* Espace entre les onglets et le contenu */
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Styles pour la nouvelle section de génération d'événement/complication */
+        .event-level-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .event-level-button {
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+            flex: 1 1 auto; /* Permet aux boutons de s'adapter */
+            min-width: 150px; /* Taille minimale */
+            text-align: center;
+        }
+        .event-level-button:hover {
+            background-color: var(--button-hover-bg);
+        }
+        .event-level-button.selected {
+            background-color: var(--accent-green);
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+            color: var(--bg-dark); /* Texte sombre pour un meilleur contraste sur l'accent */
+        }
+
+        .complication-result {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: var(--item-bg);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--accent-cyan);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 0 8px rgba(0, 184, 148, 0.2);
+        }
+
+        .history-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--border-color);
+            text-align: center;
+            font-size: 0.9em;
+            color: var(--text-light);
+        }
+        .history-section h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--item-title-color);
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+        }
+        .history-item {
+            padding: 8px 0;
+            border-bottom: 1px dotted rgba(255, 255, 255, 0.08);
+            text-align: left; /* Align text to the left for better readability */
+            margin-left: 20px; /* Indent history items slightly */
+            margin-right: 20px;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+
+        /* Responsivité de base */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5em;
+                padding: 20px 40px;
+            }
+            .container {
+                padding: 15px;
+                width: 98%;
+            }
+            .header {
+                font-size: 1.1em;
+            }
+            .generator-item {
+                font-size: 1em;
+                min-width: unset; /* Permet aux items de s'adapter mieux */
+                flex-basis: 100%; /* Prend toute la largeur sur petits écrans */
+                margin-bottom: 10px; /* Espacement vertical quand ils sont en colonne */
+            }
+            .generator-row {
+                flex-direction: column; /* Les items s'empilent */
+                gap: 10px;
+            }
+            .dice-button {
+                width: 60px;
+                height: 60px;
+                font-size: 1.2em;
+            }
+            /* Adjust card/tarot buttons for smaller screens */
+            .card-button, .tarot-button {
+                width: auto;
+                padding: 12px 20px;
+                font-size: 0.95em;
+            }
+            .odds-options {
+                flex-direction: column;
+                align-items: center;
+            }
+            .odds-option {
+                width: 90%;
+            }
+            .tabs {
+                flex-direction: column; /* Les onglets s'empilent */
+                align-items: center; /* Centrer les onglets empilés */
+                gap: 8px; /* Plus d'espace entre les onglets empilés */
+            }
+            .tab-button {
+                width: 80%; /* Largeur des onglets empilés */
+                border-radius: 8px; /* Arrondi complet des onglets empilés */
+                margin-right: 0;
+            }
+            .tab-button.active {
+                border-bottom: none; /* Pas de soulignement en bas quand ils sont empilés */
+                border-left: 4px solid var(--accent-green); /* Soulignement à gauche */
+                border-radius: 8px;
+            }
+            .event-level-button {
+                min-width: unset;
+                flex-basis: 100%;
+            }
+            .history-item {
+                margin-left: 10px;
+                margin-right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="title">COG SOLO ORACLE</div>
+
+    <div class="container">
+        <div class="header">Probabilités & Tirages</div>
+        
+        <div class="odds-options">
+            <label class="odds-option">
+                <input type="radio" name="odds" value="very-unlikely" checked> Très Improbable (10%)
+            </label>
+            <label class="odds-option">
+                <input type="radio" name="odds" value="unlikely"> Improbable (25%)
+            </label>
+            <label class="odds-option">
+                <input type="radio" name="odds" value="neutral"> Neutre (50%)
+            </label>
+            <label class="odds-option">
+                <input type="radio" name="odds" value="likely"> Possible (75%)
+            </label>
+            <label class="odds-option">
+                <input type="radio" name="odds" value="very-likely"> Très Possible (90%)
+            </label>
+        </div>
+        <div class="generator-row">
+            <div class="generator-item" id="likely-odds-result">
+                <span class="item-title">Probabilité</span>
+                <span id="odds-text-result"></span>
+            </div>
+        </div>
+        <button onclick="generateLikelyOdds()">Vérifier la Probabilité</button>
+
+        <hr> <h3 class="header" style="margin-top: 20px;">Lancer des Dés</h3>
+        <div class="dice-roller">
+            <button class="dice-button" onclick="rollDice(2)">D2</button>
+            <button class="dice-button" onclick="rollDice(3)">D3</button>
+            <button class="dice-button" onclick="rollDice(4)">D4</button>
+            <button class="dice-button" onclick="rollDice(6)">D6</button>
+            <button class="dice-button" onclick="rollDice(8)">D8</button>
+            <button class="dice-button" onclick="rollDice(10)">D10</button>
+            <button class="dice-button" onclick="rollDice(12)">D12</button>
+            <button class="dice-button" onclick="rollDice(20)">D20</button>
+            <button class="dice-button" onclick="rollFateDice()">Fate</button>
+        </div>
+        <div class="dice-result" id="dice-result">0</div>
+
+        <hr> <h3 class="header" style="margin-top: 20px;">Tirage de Carte</h3>
+        <div class="card-drawer">
+            <button class="card-button" onclick="drawPlayingCard()">Carte à jouer</button>
+        </div>
+        <div class="card-result" id="card-result"></div>
+
+        <hr> <h3 class="header" style="margin-top: 20px;">Tirage de Tarot</h3>
+        <div class="tarot-drawer">
+            <button class="tarot-button" onclick="drawTarotCard()">Carte de Tarot</button>
+        </div>
+        <div class="tarot-result" id="tarot-result"></div>
+
+        <hr> <h3 class="header" style="margin-top: 20px;">Historique des Derniers Tirages</h3>
+        <div class="history-section">
+            <h2>Dés</h2>
+            <div id="dice-history">Aucun lancer de dé récent.</div>
+            <h2>Cartes à jouer</h2>
+            <div id="card-history">Aucun tirage de carte récent.</div>
+            <h2>Tarot</h2>
+            <div id="tarot-history">Aucun tirage de tarot récent.</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">Générateur d'Événements & Complications</div>
+        
+        <div class="event-level-buttons" id="event-level-buttons">
+            <button class="event-level-button" data-level="calm">Zone très calme</button>
+            <button class="event-level-button" data-level="unstable">Zone connue mais instable</button>
+            <button class="event-level-button" data-level="hostile">Zone inconnue ou hostile</button>
+            <button class="event-level-button" data-level="peril">Péril ou action risquée</button>
+            <button class="event-level-button" data-level="desperate">Action désespérée / critique</button>
+        </div>
+        <div class="complication-result" id="complication-result">
+            <span class="item-title">Complication</span>
+            <span id="complication-text-result">Choisissez un niveau d'événement pour générer une complication.</span>
+        </div>
+        <button onclick="generateComplication()">Générer Complication</button>
+    </div>
+
+    <div class="container">
+        <div class="header">Générateur d'Événements Galactiques</div>
+        <div class="generator-row">
+            <div class="generator-item" id="galactic-focus">
+                <span class="item-title">Focus</span>
+                <span></span>
+            </div>
+            <div class="generator-item" id="galactic-action">
+                <span class="item-title">Action</span>
+                <span></span>
+            </div>
+            <div class="generator-item" id="galactic-subject">
+                <span class="item-title">Sujet</span>
+                <span></span>
+            </div>
+        </div>
+        <button onclick="generateGalacticEvent()">Générer Événement</button>
+    </div>
+
+    <div class="container">
+        <div class="header">Ambiance Sensorielle Galactique</div>
+        <div class="generator-row">
+            <div class="generator-item" id="sense-sound">
+                <span class="item-title">Son</span>
+                <span></span>
+            </div>
+            <div class="generator-item" id="sense-sight">
+                <span class="item-title">Vue</span>
+                <span></span>
+            </div>
+            <div class="generator-item" id="sense-feel">
+                <span class="item-title">Toucher</span>
+                <span></span>
+            </div>
+            <div class="generator-item" id="sense-smell">
+                <span class="item-title">Odeur</span>
+                <span></span>
+            </div>
+        </div>
+        <button onclick="generateSensoryMood()">Générer Ambiance</button>
+    </div>
+
+    <div class="container">
+        <div class="header">Oracles COG</div>
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'planets')">Planètes</button>
+            <button class="tab-button" onclick="openTab(event, 'npcs')">PNJ</button>
+            <button class="tab-button" onclick="openTab(event, 'encounters')">Rencontres</button>
+            <button class="tab-button" onclick="openTab(event, 'quests')">Quêtes</button>
+        </div>
+
+        <div id="planets" class="tab-content active">
+            <div class="generator-row">
+                <div class="generator-item" id="planet-name">
+                    <span class="item-title">Nom</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="planet-type">
+                    <span class="item-title">Type de Planète</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="planet-temp">
+                    <span class="item-title">Température</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="planet-atmosphere">
+                    <span class="item-title">Atmosphère</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="planet-gravity">
+                    <span class="item-title">Gravité</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="planet-flora-fauna">
+                    <span class="item-title">Flore/Faune</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="planet-feature">
+                    <span class="item-title">Caractéristique Unique</span>
+                    <span></span>
+                </div>
+            </div>
+            <button onclick="generatePlanet()">Générer Planète</button>
+        </div>
+
+        <div id="npcs" class="tab-content">
+            <div class="generator-row">
+                <div class="generator-item" id="npc-full-name">
+                    <span class="item-title">Nom Complet</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="npc-sex">
+                    <span class="item-title">Sexe</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="npc-race">
+                    <span class="item-title">Race</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="npc-profession">
+                    <span class="item-title">Métier</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="npc-trait">
+                    <span class="item-title">Trait de Caractère</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="npc-physique">
+                    <span class="item-title">Physique</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="npc-motivation">
+                    <span class="item-title">Motivation Secrète</span>
+                    <span></span>
+                </div>
+            </div>
+            <button onclick="generateNPC()">Générer PNJ</button>
+        </div>
+
+        <div id="encounters" class="tab-content">
+            <div class="generator-row">
+                <div class="generator-item" id="encounter-type">
+                    <span class="item-title">Type de Rencontre</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="encounter-faction">
+                    <span class="item-title">Faction Impliquée</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="encounter-objective">
+                    <span class="item-title">Objectif de la Rencontre</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="encounter-complication">
+                    <span class="item-title">Complication Immédiate</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="encounter-location">
+                    <span class="item-title">Lieu Spécifique</span>
+                    <span></span>
+                </div>
+            </div>
+            <button onclick="generateEncounter()">Générer Rencontre</button>
+        </div>
+
+        <div id="quests" class="tab-content">
+            <div class="generator-row">
+                <div class="generator-item" id="quest-type">
+                    <span class="item-title">Type de Quête</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="quest-mandate">
+                    <span class="item-title">Mandataire</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="quest-objective">
+                    <span class="item-title">Objectif Principal</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="quest-reward">
+                    <span class="item-title">Récompense Potentielle</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="quest-obstacle">
+                    <span class="item-title">Obstacle Majeur</span>
+                    <span></span>
+                </div>
+                <div class="generator-item" id="quest-revelation">
+                    <span class="item-title">Révélation</span>
+                    <span></span>
+                </div>
+            </div>
+            <button onclick="generateQuest()">Générer Quête</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <button onclick="rerollAll()">Relancer Toutes les Tables Visibles</button>
+    </div>
+
+    <script>
+        // --- Fonctions utilitaires ---
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function getRandomElement(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        // --- Données pour les générateurs (À ÉTOFFER POUR COG !) ---
+        const oddsThresholds = {
+            'very-unlikely': 10, // Réussite si D100 <= 10
+            'unlikely': 25,     // Réussite si D100 <= 25
+            'neutral': 50,      // Réussite si D100 <= 50
+            'likely': 75,       // Réussite si D100 <= 75
+            'very-likely': 90   // Réussite si D100 <= 90
+        };
+
+        const galacticFocus = ["Vaisseau allié", "Station abandonnée", "Planète lointaine", "Artefact alien", "Frondeur solitaire", "Convoi commercial", "Installation minière", "Zone de guerre", "Ancienne balise", "Créature spatiale"];
+        const galacticAction = ["Attaque furtive", "Découverte inattendue", "Sabotage réussi", "Message intercepté", "Négociation difficile", "Poursuite acharnée", "Piratage de système", "Évacuation d'urgence", "Réparation critique", "Exploration de ruines"];
+        const galacticSubject = ["Prisonniers politiques", "Ressources rares", "Ancienne prophétie", "Technologie expérimentale", "Virus rampant", "Cartes stellaires interdites", "Identité cachée", "Révélations sur une faction", "Menace environnementale", "Un allié blessé"];
+
+        const senseSounds = ["Bips insistants du tableau de bord", "Sifflement d'air pressurisé", "Murmures lointains des systèmes de support-vie", "Grincements métalliques de la coque", "Silence profond de l'espace", "Explosions sourdes à distance", "Chuchotis électroniques", "Sirènes d'alarme", "Bruit de pas dans un couloir"];
+        const senseSights = ["Lumières clignotantes et défaillantes", "Reflets de nébuleuses colorées", "Silhouette indistincte dans la brume", "Écrans scintillant d'informations cryptées", "Brouillard cosmique dense", "Éclairs d'énergie lointains", "Graffiti alien sur les parois", "Cristaux luminescents"];
+        const senseFeels = ["Froid piquant du vide à travers la coque", "Vibration constante du pont sous les pieds", "Surface gluante et inconnue", "Souffle chaud du ventilateur", "Humidité ambiante lourde", "Paroi glacée sous les doigts", "Secousse imprévue", "Légère pesanteur artificielle"];
+        const senseSmells = ["Ozone brûlé après une décharge d'énergie", "Métal froid et poussiéreux", "Moisissure et humidité stagnante", "Carburant lourd et entêtant", "Air recyclé vicié", "Produits chimiques inconnus", "Parfum sucré et étrange d'une plante alien"];
+
+        const complications = {
+            'Mineure': ["Un détail perturbateur", "Un petit contretemps", "Un malentendu passager"],
+            'Irritante': ["Un ralentissement inattendu", "Un obstacle mineur", "Une distraction persistante"],
+            'Menaçante': ["Un danger potentiel se profile", "Une menace à l'horizon", "Un risque à évaluer"],
+            'Difficile': ["Un obstacle conséquent à surmonter", "Une situation complexe", "Un défi de taille"],
+            'Dangereuse': ["Met le personnage en péril", "Risque de blessure ou de perte", "Menace immédiate"],
+            'Dramatique': ["Risque majeur ou échec grave", "Conséquences désastreuses", "Tournant critique imprévu"]
+        };
+
+        const complicationChances = {
+            'calm': { // Zone très calme
+                'Mineure': 90, 'Irritante': 10, 'Menaçante': 0, 'Difficile': 0, 'Dangereuse': 0, 'Dramatique': 0
+            },
+            'unstable': { // Zone connue mais instable
+                'Mineure': 40, 'Irritante': 30, 'Menaçante': 20, 'Difficile': 10, 'Dangereuse': 0, 'Dramatique': 0
+            },
+            'hostile': { // Zone inconnue ou hostile
+                'Mineure': 10, 'Irritante': 20, 'Menaçante': 30, 'Difficile': 25, 'Dangereuse': 15, 'Dramatique': 0
+            },
+            'peril': { // Péril ou action risquée
+                'Mineure': 0, 'Irritante': 10, 'Menaçante': 20, 'Difficile': 30, 'Dangereuse': 30, 'Dramatique': 10
+            },
+            'desperate': { // Action désespérée / critique
+                'Mineure': 0, 'Irritante': 0, 'Menaçante': 10, 'Difficile': 20, 'Dangereuse': 40, 'Dramatique': 30
+            }
+        };
+
+        let selectedEventLevel = 'calm'; // Niveau d'événement par défaut
+
+        // --- Données pour les Oracles COG étendus ---
+        // Planètes
+        const planetNames = [
+            "Xylos", "Aerion-7", "Kaelen Prime", "Veridian Nexus", "Obsidian Reach",
+            "Terra Nova", "Cinderfall", "Luminary", "Void's Edge", "Aethelgard",
+            "Celestia", "Draxis Minor", "Emberoth", "Frostbite", "Glimmering Spire",
+            "Helios Prime", "Ignis Fatuus", "Jovian's Rest", "Kryllia", "Luminara",
+            "Mirage Prime", "Nebulon-9", "Oakhaven", "Pulsar's Glow", "Quasar's Heart",
+            "Rift's End", "Stellaris", "Tesseract", "Umbral Void", "Vesperia",
+            "Wyrmwood", "Xenith", "Yggdrasil", "Zephyr's Breath", "Aetherium",
+            "Blightstone", "Crimson Tide", "Dreadnought's Grave", "Eldoria", "Faelan",
+            "Gargantua", "Hydra's Maw", "Ironclad", "Jade Coast", "Korgon",
+            "Leviathan's Deep", "Maelstrom", "Nightshade", "Onyx Ridge", "Phantasm",
+            "Ragnarok", "Solaris", "Titan's Veil", "Utopia", "Vortex Prime",
+            "Whisperwind", "Xylosian Outpost", "Yielding Ground", "Zephyr's Kiss", "Argos",
+            "Borealis", "Chrono-Prime", "Darkwater", "Elysium", "Fallen Star",
+            "Grimfang", "Hyperion", "Inferno", "Jungle's Edge", "Kraken's Fall",
+            "Lunar Whisper", "Mystic Isle", "Nova Lux", "Oblivion", "Pandora's Box",
+            "Quarantine Zone", "Radiant Bloom", "Shadowfen", "Terra Incognita", "Uncharted",
+            "Valhalla", "Wasteland", "Xanadu", "Yonder", "Zenith"
+        ];
+
+        const planetTypes = [
+            "Tellurique", "Gazeuse géante", "Monde océanique", "Monde désertique", "Monde jungle",
+            "Monde de glace", "Monde volcanique", "Monde-forge", "Monde mort", "Monde-jardin",
+            "Monde toxique", "Monde gazeux", "Monde fongique", "Monde cristallin", "Monde industriel",
+            "Monde forestier", "Monde-nécropole", "Monde tempête", "Monde arctique", "Monde de lave",
+            "Monde minier", "Monde symbiotique", "Monde artificiel", "Monde en ruines", "Monde dystopique",
+            "Monde paradisiaque", "Monde des rêves", "Monde miroir", "Monde fragmenté", "Monde résonant",
+            "Monde pulsant", "Monde éthéré", "Monde irradié", "Monde spectral", "Monde vivant",
+            "Monde entropique", "Monde temporel", "Monde distordu", "Monde spectral", "Monde fractal",
+            "Monde prismatique", "Monde gravitationnel", "Monde cosmique", "Monde des ombres", "Monde des murmures",
+            "Monde des résonances", "Monde des mirages", "Monde des échos", "Monde des souvenirs", "Monde des âmes"
+        ];
+
+        const planetTemperatures = [
+            "Glaciale (-100°C)", "Froide (0°C)", "Tempérée (20°C)", "Chaude (40°C)", "Torride (80°C+)",
+            "Polaire (-50°C)", "Aride (60°C)", "Sub-tropicale (25°C)", "Caniculaire (120°C+)", "Glace éternelle (-150°C)",
+            "Volcanique (200°C+)", "Douce (15°C)", "Brûlante (100°C)", "Glace fondante (5°C)", "Extrême (-200°C à 300°C)",
+            "Froide et venteuse (-20°C)", "Chaude et humide (35°C)", "Tempérée avec variations (10-30°C)", "Arctique glaciale (-70°C)", "Fournaise (250°C+)"
+        ];
+
+        const planetAtmospheres = [
+            "Respirable (Type I)", "Toxique (Type II)", "Corrosive (Type III)", "Dense (Type IV)", "Ténue (V)", "Aucune",
+            "Méthane (Type VI)", "Ammoniac (Type VII)", "Soufrée (Type VIII)", "Radioactive (Type IX)", "Éthérée (Type X)",
+            "Dense et humide", "Rarefiée et froide", "Composée d'azote", "Composée de chlore", "Composée de phosphore",
+            "Composée d'hydrogène lourd", "Composée d'hélium", "Composée de gaz rares", "Composée de vapeur", "Instable et changeante"
+        ];
+
+        const planetGravities = [
+            "Faible (0.5 G)", "Standard (1 G)", "Élevée (1.5 G)", "Très Élevée (2 G+)",
+            "Micro-gravité (0.1 G)", "Hyper-gravité (3 G+)", "Variable (0.5-1.5 G)", "Nulle (0 G)",
+            "Légère (0.7 G)", "Intense (2.5 G)"
+        ];
+
+        const planetFloraFauna = [
+            "Flore luxuriante, faune agressive", "Végétation rare, créatures souterraines", "Faune indigène intelligente", "Écosystème symbiotique unique", "Désert biologique, aucune vie complexe",
+            "Flore bioluminescente, faune nocturne", "Plantes carnivores géantes, insectes mutants", "Océans grouillants de vie, prédateurs marins", "Forêts pétrifiées, oiseaux migrateurs", "Plantes cristallines, créatures de roche",
+            "Organismes unicellulaires, atmosphère vivante", "Écosystème fongique, spores mutagènes", "Faune et flore adaptées aux radiations", "Monde stérile, formes de vie microscopiques", "Faune cybernétique, plantes métalliques",
+            "Créatures d'énergie pure, végétation éthérée", "Vie en suspension, écosystème aérien", "Plantes sensitives, animaux mimétiques", "Écosystème endémique, espèces en voie d'extinction", "Faune dormante, flore dormante"
+        ];
+
+        const planetUniqueFeatures = [
+            "Anciennes ruines d'une civilisation perdue", "Phénomènes météorologiques extrêmes", "Gisements de minerais rares", "Portail dimensionnel instable", "Présence d'une entité cosmique endormie",
+            "Forêt de champignons géants", "Canyons de glace chantants", "Villes flottantes", "Océans de méthane", "Montagnes de cristal",
+            "Fosses abyssales luminescentes", "Champs d'énergie mystérieux", "Arbres pensants", "Fleuves de lave solidifiée", "Atmosphère changeante",
+            "Structures monolithiques géantes", "Vestiges d'une guerre galactique", "Échos temporels", "Zones d'apesanteur", "Failles tectoniques actives",
+            "Réseau de cavernes souterraines", "Soleil binaire inhabituel", "Anneaux planétaires habités", "Lunes multiples en orbite", "Pluie de météorites constante",
+            "Événements cosmiques étranges", "Cryptes d'une race éteinte", "Source d'énergie illimitée", "Prison cosmique", "Laboratoire abandonné",
+            "Jardins suspendus", "Arches spatiales échouées", "Villes sous-marines", "Phénomènes d'électromagnétisme", "Champs de ruines antiques"
+        ];
+        // PNJ
+        const maleFirstNames = [
+            "Kael", "Jax", "Roric", "Zylos", "Thane", "Corbin", "Dax",
+            "Arik", "Bram", "Cyrus", "Dagan", "Elias", "Finn", "Gareth",
+            "Hakon", "Ivar", "Joran", "Kaelen", "Larkin", "Marek", "Nolan",
+            "Orin", "Perrin", "Quinn", "Rune", "Seraph", "Torvin", "Ulric",
+            "Vance", "Wren", "Xavier", "Yorick", "Zephyr", "Alden", "Brody",
+            "Caleb", "Declan", "Ezra", "Felix", "Gideon", "Jasper", "Kian",
+            "Lachlan", "Milo", "Owen", "Ronan", "Silas", "Tobin", "Wyatt",
+            "Zane", "Asher", "Caden", "Darian", "Ethan", "Flynn", "Grayson",
+            "Hendrix", "Isaiah", "Julian", "Kai", "Leo", "Miles", "Noah",
+            "Oscar", "Rhys", "Seth", "Trey", "Victor", "Weston", "Xander",
+            "Yael", "Zeke", "Aldo", "Bain", "Cade", "Dare", "Elton", "Farris",
+            "Gage", "Harlan", "Irving", "Jett", "Kade", "Lorne", "Maddox",
+            "Nevin", "Odin", "Pax", "Ryder", "Slade", "Tiernan", "Uriel",
+            "Vinnie", "Wolf", "Yuri", "Zoran"
+        ];
+
+        const femaleFirstNames = [
+            "Lyra", "Seraphina", "Anya", "Zara", "Elara", "Kira", "Nyx",
+            "Astrid", "Briar", "Cora", "Dara", "Evadne", "Faelan", "Glynnis",
+            "Hazel", "Iris", "Juno", "Keira", "Lena", "Maeve", "Niamh",
+            "Opal", "Petra", "Rowan", "Skye", "Tamsin", "Uma", "Vesper",
+            "Willow", "Xylona", "Yara", "Zephyrine", "Aisling", "Bronte",
+            "Cadence", "Delphi", "Elowen", "Freya", "Genevieve", "Imogen",
+            "Juniper", "Lena", "Mina", "Nova", "Ondine", "Piper", "Quinn",
+            "Rhea", "Sienna", "Talia", "Una", "Vivian", "Willa", "Xenia",
+            "Yasmin", "Zelda", "Anya", "Blaise", "Cleo", "Dahlia", "Echo",
+            "Fiona", "Gia", "Helena", "Isla", "Jade", "Katya", "Luna",
+            "Mara", "Nia", "Oriana", "Phoebe", "Raven", "Sage", "Thalia",
+            "Ursa", "Veda", "Wanda", "Xyla", "Yara", "Zoe", "Aella",
+            "Branwen", "Celeste", "Daphne", "Eira", "Fleur", "Gemma",
+            "Honor", "Ivy", "Jessa", "Kaelen", "Lira", "Margo", "Nyssa",
+            "Orla", "Pia", "Raina", "Selene", "Tara", "Ursula", "Vera"
+        ];
+
+        const lastNames = [
+            "Vance", "Storm", "Riker", "Kaelen", "Thorne", "Valerius", "Shadow", "Orion", "Blackwood", "Stone",
+            "Ashwood", "Brightblade", "Crimson", "Darkwater", "Everhart", "Frost", "Grave", "Hawkins", "Ironhide", "Jett",
+            "Keane", "Lockhart", "Moon", "Nightshade", "Oakhart", "Phoenix", "Quill", "Rivera", "Sterling", "Talbot",
+            "Umbral", "Viper", "Wilder", "Xenon", "Yarrow", "Zephyr", "Argent", "Blaze", "Cinder", "Dread",
+            "Eclipse", "Fable", "Grimm", "Haven", "Ignis", "Jaeger", "Knox", "Lightfoot", "Mortis", "Nebula",
+            "Onyx", "Pryor", "Rift", "Stryker", "Titan", "Underwood", "Valiant", "Whisper", "Wyvern", "Zenith",
+            "Blade", "Claymore", "Dragon", "Echo", "Falcon", "Ghost", "Hunter", "Inferno", "Justice", "Kestrel",
+            "Lazarus", "Mercy", "Nemesis", "Omega", "Phantom", "Ranger", "Sable", "Sentinel", "Stormwind", "Torch",
+            "Vanguard", "Warlock", "Xylos", "Yeti", "Zodiac", "Arsenal", "Bastion", "Comet", "Dagger", "Enigma"
+        ];
+
+        const sexes = ["Homme", "Femme", "Inconnu", "Non-binaire", "Androïde (genre non applicable)"];
+
+        const races = [
+            "Humain", "Xylosien (alien humanoïde)", "Synthétique (androïde)", "K'tharr (reptilien)", "Auroran (énergétique)",
+            "Gronk (costaud)", "Silas (insectoïde)", "Eldar (ancien)", "Mech-Serviteur (robot)", "Flora-Sapiens (végétal)",
+            "Aquatien (aquatique)", "Terrien (humain de la Terre)", "Cyborg (humain modifié)", "Zoïd (bestial)", "Spectre (incorporel)",
+            "Chronosien (maître du temps)", "Luminary (être de lumière)", "Ombrien (être des ombres)", "Gargouille (rocailleux)", "Nymphe (élémentaire)",
+            "Vulpine (renard)", "Ursin (ours)", "Avien (oiseau)", "Felien (félin)", "Canidé (chien)",
+            "Mantis (préciseur)", "Arachnid (araignée)", "Slime (amorphe)", "Crystalline (cristallin)", "Vaporien (gazeux)",
+            "Golems (animé)", "Shifter (changeforme)", "Voidwalker (du vide)", "Dreamweaver (du rêve)", "Echo (mimétique)"
+        ];
+
+        const npcProfessions = [
+            "Pilote de fret", "Contrebandier", "Scientifique excentrique", "Mercenaire aguerri", "Diplomate corrompu",
+            "Ingénieur de maintenance", "Spécialiste en cybernétique", "Guerrier sacré", "Collectionneur d'art alien", "Barman de spatioport",
+            "Journaliste indépendant", "Médecin de bord", "Chasseur de primes", "Archéologue", "Explorateur spatial",
+            "Hackeur de données", "Marchand d'informations", "Mécanicien de vaisseau", "Gardien de prison", "Guide touristique",
+            "Prêtre interstellaire", "Artiste de rue", "Cuisinier galactique", "Détective privé", "Enseignant",
+            "Mineur d'astéroïdes", "Officier de la Fédération", "Riche héritier", "Ancien combattant", "Passeur clandestin",
+            "Cyborg de combat", "Négociant en esclaves", "Bricoleur de robots", "Courtier en technologie", "Espion corporatiste",
+            "Agent de renseignement", "Chef de secte", "Gladiateur d'arène", "Professeur de xénolinguistique", "Réparateur de droïdes",
+            "Éleveur d'aliens", "Bibliothécaire stellaire", "Cartographe", "Historien galactique", "Collectionneur de débris",
+            "Artisan d'armes", "Tueur à gages", "Protecteur", "Réparateur de moteurs FTL", "Astrogateur"
+        ];
+
+        const npcTraits = [
+            "Cynique", "Optimiste inébranlable", "Pragmatique", "Impulsif", "Mystérieux et silencieux",
+            "Honnête", "Fourbe", "Névrosé", "Loyal", "Ambitieux",
+            "Charismatique", "Timide", "Sarcastique", "Idéaliste", "Pessimiste",
+            "Calme", "Agressif", "Curieux", "Méfiant", "Généreux",
+            "Égoïste", "Paresseux", "Travailleur", "Méthodique", "Désorganisé",
+            "Spirituel", "Droit", "Naïf", "Manipulateur", "Protecteur",
+            "Rêveur", "Réaliste", "Froid", "Chaleureux", "Volatile",
+            "Patient", "Impatient", "Obsessif", "Détaché", "Empathique",
+            "Rancunier", "Brave", "Lâche", "Prudent", "Téméraire",
+            "Philosophe", "Savant fou", "Pieux", "Rebelle", "Conformiste"
+        ];
+
+        const npcPhysiques = [
+            "Grand et musclé", "Petit et agile", "Mince et élégant", "Robuste et trapu", "Cyborg avec des implants visibles",
+            "Marqué par les cicatrices", "Beauté exotique", "Apparence androgyne", "Vieux et fatigué", "Jeune et énergique",
+            "Corpulent", "Svelte", "Déformé par les mutations", "Élégant et raffiné", "Débraillé et négligé",
+            "Pâle et maladif", "Bronzé et athlétique", "Tatoué de la tête aux pieds", "Avec une prothèse visible", "Yeux perçants",
+            "Cheveux longs et emmêlés", "Crâne rasé", "Vêtements d'apparat", "Tenue de combat usée", "Marches silencieuses",
+            "Voix grave et rocailleuse", "Voix aiguë et nasillarde", "Manières maniérées", "Poignée de main ferme", "Regard fuyant",
+            "Geste vif", "Posture voûtée", "Épaules larges", "Petit gabarit", "Air renfrogné"
+        ];
+
+        const npcMotivations = [
+            "Recherche de vengeance", "Quête de savoir ancien", "Protection d'un secret", "Accumulation de richesse", "Libération de son peuple",
+            "Fuite d'un passé sombre", "Réparation d'une erreur", "Désir de reconnaissance", "Amour perdu", "Simple survie",
+            "Recherche de rédemption", "Défense de la justice", "Rétablissement de l'ordre", "Poursuite d'une obsession", "Création d'une nouvelle vie",
+            "Recherche de pouvoir", "Désir de destruction", "Protection d'un être cher", "Découverte de la vérité", "Établissement d'une dynastie",
+            "Vivre une vie tranquille", "Servir une divinité", "Changer le système", "Survivre à une maladie", "Récupérer un objet volé",
+            "Échapper à des dettes", "Retrouver sa famille", "Obtenir des réponses", "Prouver sa valeur", "Héritage familial",
+            "Contrat professionnel", "Désir de paix", "Vaincre un rival", "Rechercher la gloire", "Échapper à la loi"
+        ];
+
+        // Rencontres
+        const encounterTypes = [
+            "Combat spatial", "Rencontre sociale", "Exploration de site", "Poursuite", "Piège/Embuscade",
+            "Événement environnemental", "Dysfonctionnement de vaisseau", "Découverte inattendue", "Raid de pirates", "Contrôle de douane",
+            "Mission de sauvetage", "Évasion de prison", "Infiltration", "Sabotage", "Négociation diplomatique",
+            "Course-poursuite à pied", "Enquête criminelle", "Panne de courant généralisée", "Attaque de créatures sauvages", "Conflit territorial",
+            "Découverte d'un artefact", "Tempête cosmique", "Atterrissage forcé", "Fête galactique", "Manifestation politique",
+            "Avarie moteur", "Rencontre avec une IA rebelle", "Découverte d'une anomalie", "Chute de débris", "Vol de données",
+            "Épidémie à bord", "Défection d'un membre d'équipage", "Alerte à la bombe", "Pillage d'épave", "Convoi à protéger",
+            "Invasion alien", "Faux drapeau", "Échange illicite", "Désactivation d'un bouclier", "Révélation choc",
+            "Dispersion d'astéroïdes", "Panne d'oxygène", "Intervention d'une flotte", "Découverte d'un tunnel de ver", "Contact avec une nouvelle espèce"
+        ];
+
+        const factionsInvolved = [
+            "Fédération Galactique", "Consortium Marchand", "Pirates de la Ceinture", "Cultistes de l'Ombre", "Aliens Indigènes",
+            "Corporation Militaire Privée", "Rebelles Anarchistes", "Chercheurs Indépendants", "Aucune (neutre/sauvage)", "Empire Solarien",
+            "Confrérie des Ombres", "Maison Noble Aeliana", "Syndicat du Ciel", "Flotte des Égarés", "Les Gardiens des Anciens",
+            "Les Ingénieurs du Néant", "Secte du Grand Vide", "Les Écologistes Stellaires", "Forces de Sécurité Locales", "Unité de Renseignement",
+            "La Résistance Xylosienne", "Le Cartel de K'tharr", "Les Artisans Synthétiques", "La Confrérie des Commerçants", "Les Voleurs de Rêves",
+            "L'Assemblée des Sages", "Les Maraudeurs de l'Espace", "Les Chevaliers Stellaires", "Les Chasseurs de Comètes", "Les Cultivateurs de Cristaux",
+            "Le Réseau Souterrain", "La Ligue des Explorateurs", "Les Soldats de Fortune", "Les Nomades de la Voie Lactée", "Les Gardiens du Nexus"
+        ];
+
+        const encounterObjectives = [
+            "Détruire l'ennemi", "Obtenir des informations", "Secourir des otages", "Échapper à la détection", "Négocier un accord",
+            "Récupérer un objet", "Explorer un lieu dangereux", "Défendre une position", "Réparer un système", "Éviter le conflit",
+            "Désactiver un champ de force", "Extraire un PNJ", "Voler un vaisseau", "Placer un mouchard", "Désarmer une bombe",
+            "Survivre à l'environnement", "Retrouver un chemin", "Détourner l'attention", "Éloigner une menace", "Protéger une cargaison",
+            "Interroger un suspect", "Établir le contact", "Établir une base", "Empêcher une évasion", "Localiser une cachette",
+            "Neutraliser une cible", "Récupérer des données", "Escorter un convoi", "Analyser un échantillon", "Collecter des ressources",
+            "Faire diversion", "Éloigner des renforts", "Créer un passage", "Identifier un traître", "Dissimuler des preuves",
+            "Échapper à une traque", "Éteindre un incendie", "Rétablir l'alimentation", "Sécuriser un périmètre", "Débloquer un accès"
+        ];
+
+        const encounterComplications = [
+            "Renforts ennemis arrivent", "L'environnement devient hostile", "Un allié est blessé", "L'objectif est différent que prévu", "Manque de ressources critiques",
+            "Le temps presse", "Un traître est révélé", "L'équipement tombe en panne", "La zone est piégée", "Intervention d'une troisième faction",
+            "Un bouclier tombe en panne", "Le système de navigation est défaillant", "Le PNJ à secourir est hostile", "Des civils sont impliqués", "La cible s'enfuit",
+            "Un piège se referme", "La météo s'aggrave", "Les communications sont coupées", "Une épidémie se déclare", "Un ancien ennemi refait surface",
+            "Le vaisseau est abordé", "Une tempête EMP", "Le carburant est bas", "Une tempête solaire approche", "Un astéroïde dérive",
+            "Des mines sont cachées", "Un champ de débris dense", "Un portail se ferme", "Un ver spatial attaque", "La gravité s'inverse",
+            "Le champ de bataille est obscurci", "Un virus informatique se propage", "La cible est plus forte que prévu", "Un événement imprévu", "Les systèmes vitaux s'arrêtent",
+            "Le moral de l'équipage est bas", "Des illusions optiques", "Des hallucinations sonores", "Une explosion proche", "Un court-circuit généralisé"
+        ];
+
+        const encounterLocations = [
+            "Ceinture d'astéroïdes", "Station spatiale abandonnée", "Planète désertique", "Nébuleuse dense", "Vaisseau en ruine",
+            "Marché noir orbital", "Champ de débris", "Base secrète", "Cité souterraine", "Port spatial bondé",
+            "Champ de bataille spatial", "Épave de vaisseau amiral", "Installation de recherche isolée", "Prison spatiale", "Astéroïde minier",
+            "Plaine volcanique", "Grotte de glace", "Forêt extraterrestre", "Monde-jardin artificiel", "Ville flottante",
+            "Ruines antiques", "Station scientifique", "Vaisseau fantôme", "Avant-poste frontalier", "Colonie minière",
+            "Laboratoire caché", "Installation de traitement des déchets", "Usine automatisée", "Temple ancien", "Chantier naval orbital",
+            "Réseau de cavernes", "Champs de gaz", "Nid de créatures", "Planète gazeuse géante", "Lune gelée",
+            "Dôme sous-marin", "Anomalie spatiale", "Gisement de minerai rare", "Station relais", "Passage étroit"
+        ];
+
+        // Quêtes
+        const questTypes = [
+            "Récupération", "Escorte", "Assassinat/Neutralisation", "Espionnage", "Exploration",
+            "Sauvetage", "Livraison", "Sabotage", "Diplomatie", "Recherche/Analyse",
+            "Contrebande", "Défense de position", "Évasion", "Infiltration", "Négociation",
+            "Poursuite", "Détournement", "Interrogatoire", "Surveillance", "Révélation",
+            "Trafic", "Extraction", "Désinformation", "Provocation", "Construction",
+            "Réparation", "Réinitialisation", "Purification", "Reconnaissance", "Exfiltration",
+            "Contre-espionnage", "Médiation", "Destruction", "Création", "Éducation"
+        ];
+
+        const questMandates = [
+            "Un contact mystérieux", "Une corporation puissante", "Un gouvernement local", "Un scientifique désespéré", "Un groupe de rebelles",
+            "Un vieil ami", "Un criminel notoire", "Une intelligence artificielle", "Un culte secret", "Le personnage lui-même",
+            "Un syndicat du crime", "Un ambassadeur étranger", "Un groupe d'activistes", "Un riche collectionneur", "Un ancien rival",
+            "Une entité cosmique", "Une famille noble", "Un chef de guerre", "Un réseau d'informateurs", "Un groupe d'archéologues",
+            "Les habitants d'une colonie", "Un agent double", "Une organisation humanitaire", "Un prisonnier évadé", "Un prophète",
+            "Un artiste dissident", "Un groupe de mercenaires", "Un gardien de la paix", "Un vaisseau en détresse", "Une conscience collective",
+            "Un programme holographique", "Une relique ancienne", "Une prophétie oubliée", "Un message crypté", "Un système corrompu"
+        ];
+
+        const questObjectives = [
+            "Récupérer un artefact ancien", "Secourir un otage important", "Livrer un colis top-secret", "Infiltrer une base ennemie", "Cartographier un système inexploré",
+            "Éliminer une menace biologique", "Négocier une alliance fragile", "Détruire une installation clé", "Trouver la source d'un signal étrange", "Protéger une personnalité",
+            "Désarmer un explosif", "Voler des schémas de vaisseau", "Sauver une colonie de la famine", "Neutraliser un commandant ennemi", "Collecter des échantillons rares",
+            "Établir un contact diplomatique", "Saboter une ligne d'approvisionnement", "Trouver une technologie perdue", "Capter un message codé", "Échapper à une traque",
+            "Réparer un générateur de bouclier", "Rétablir les communications", "Défendre une position stratégique", "Identifier un espion", "Débloquer un accès sécurisé",
+            "Détruire une flotte pirate", "Récupérer des données volées", "Escorter un convoi de réfugiés", "Infiltrer un culte", "Apporter des preuves incriminantes",
+            "Libérer un prisonnier politique", "Désactiver un réseau de surveillance", "Éteindre un incendie spatial", "Traquer un fugitif", "Échapper à une embuscade",
+            "Démanteler un laboratoire clandestin", "Sécuriser une zone contestée", "Trouver un remède à une maladie", "Rétablir l'ordre dans un secteur", "Infiltrer une réunion secrète"
+        ];
+
+        const questRewards = [
+            "Crédits importants", "Technologie alien rare", "Informations cruciales", "Accès à une zone restreinte", "Faveur d'une faction puissante",
+            "Un nouveau vaisseau/équipement", "La liberté", "Une réputation améliorée", "Des coordonnées de trésor", "Une nouvelle compétence",
+            "Un allié loyal", "Des ressources précieuses", "Un passe-droit diplomatique", "Une cache d'armes illégales", "Un secret bien gardé",
+            "Des actions dans une corporation", "L'immunité contre la loi", "Une cure pour une maladie", "Une carte stellaire détaillée", "Des titres de propriété",
+            "Une influence politique", "Un implant cybernétique", "Un droïde de compagnie", "L'accès à un marché noir", "Une mutation génétique",
+            "Une nouvelle identité", "Des informations sur un membre de la famille", "La destruction d'un rival", "L'approbation d'une divinité", "La paix intérieure",
+            "Une capsule de stase", "Des coordonnées de saut", "Une balise de détresse", "Des plans de construction", "Un animal de compagnie exotique",
+            "Un fragment d'artefact", "Des codes d'accès universels", "Une armure unique", "Un titre de propriété stellaire", "La reconnaissance publique"
+        ];
+
+        const questObstacles = [
+            "Une faction rivale s'y oppose", "Des conditions environnementales extrêmes", "La zone est sous haute surveillance", "Un traître dans les rangs", "La cible est mieux protégée que prévu",
+            "Le temps presse", "Manque de ressources ou de personnel", "Une épidémie se déclare", "Un ancien ennemi refait surface", "Des codes d'accès manquants",
+            "Un champ de force impénétrable", "Des droïdes de sécurité améliorés", "Un PNJ refuse de coopérer", "Une tempête EMP inattendue", "Le vaisseau est endommagé",
+            "Des preuves ont été effacées", "Un témoin clé a disparu", "Des renforts ennemis constants", "Une créature dangereuse garde la zone", "Le terrain est impraticable",
+            "Des négociations s'éternisent", "Une technologie défectueuse", "Des pièges imprévus", "Une troisième faction intervient", "Le mandataire est malhonnête",
+            "Une trahison interne", "Une alarme se déclenche", "Des perturbations gravitationnelles", "Un virus informatique hostile", "Des renforts aériens",
+            "Un système de défense automatisé", "Une embuscade tendue", "Le climat devient mortel", "Une IA hostile bloque le chemin", "Des ressources sont rares",
+            "Une chasse à l'homme est lancée", "Un blocus spatial", "Des civils sont en danger", "Une distorsion temporelle", "Une illusion trompeuse"
+        ];
+
+        const questRevelations = [
+            "L'objectif réel est différent", "Le mandataire n'est pas qui il prétend être", "L'artefact est une arme", "L'otage est volontaire", "La menace est plus grande que prévue",
+            "Une nouvelle faction entre en jeu", "Le personnage est lié à l'histoire", "Un secret personnel est exposé", "La récompense est un piège", "La quête mène à une autre quête",
+            "Le PNJ à sauver est le vrai coupable", "La technologie est une forme de vie", "L'IA est consciente", "La quête est une diversion", "Le mandataire a été manipulé",
+            "L'ennemi est un allié potentiel", "Le but de la mission est moralement ambigu", "Il y a un double-fond", "La vérité est plus complexe", "La quête était un test",
+            "Le personnage a une connexion inattendue", "Un sacrifice est nécessaire", "La prophétie était fausse", "Un complot à grande échelle", "La menace est intérieure",
+            "L'objet récupéré est maudit", "La faction alliée est corrompue", "La mission est un piège mortel", "Un ancien dieu se réveille", "La civilisation perdue n'était pas éteinte",
+            "La vérité sur la galaxie", "Le passé du personnage est révélé", "L'ennemi était juste incompris", "La récompense a un prix caché", "La quête ne se termine jamais",
+            "La source du problème est le personnage", "L'objet était une chimère", "La destination est une illusion", "La solution est la destruction", "La quête est une prophétie"
+        ];
+
+        // Cartes à jouer
+        const suits = ["Cœur", "Carreau", "Trèfle", "Pique"];
+        const ranks = ["As", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Valet", "Dame", "Roi"];
+
+        // Tarot de Marseille (Arcanes Majeurs pour simplifier)
+        const tarotMajorArcana = [
+            "Le Bateleur", "La Papesse", "L'Impératrice", "L'Empereur", "Le Pape", "L'Amoureux", "Le Chariot", "La Justice", "L'Hermite", "La Roue de Fortune",
+            "La Force", "Le Pendu", "L'Arcane sans Nom (La Mort)", "Tempérance", "Le Diable", "La Maison Dieu", "L'Étoile", "La Lune", "Le Soleil", "Le Jugement",
+            "Le Monde", "Le Mat"
+        ];
+        const tarotInterpretations = {
+            "Le Bateleur": { upright: "Initiative, potentiel, nouveau départ", reversed: "Indécision, manque de volonté, tromperie" },
+            "La Papesse": { upright: "Intuition, sagesse, mystère", reversed: "Secrets révélés, ignorance, superficialité" },
+            "L'Impératrice": { upright: "Créativité, fertilité, abondance", reversed: "Blocage créatif, stérilité, dépendance" },
+            "L'Empereur": { upright: "Autorité, structure, contrôle", reversed: "Abus de pouvoir, rigidité, manque de discipline" },
+            "Le Pape": { upright: "Tradition, guidance, enseignement", reversed: "Non-conformité, mauvaises informations, rébellion" },
+            "L'Amoureux": { upright: "Choix, relations, harmonie", reversed: "Désaccord, rupture, mauvaise décision" },
+            "Le Chariot": { upright: "Victoire, maîtrise de soi, détermination", reversed: "Manque de contrôle, défaite, précipitation" },
+            "La Justice": { upright: "Équilibre, vérité, impartialité", reversed: "Injustice, déséquilibre, partialité" },
+            "L'Hermite": { upright: "Solitude, introspection, guidance intérieure", reversed: "Isolement, imprudence, retrait forcé" },
+            "La Roue de Fortune": { upright: "Changement, destin, opportunité", reversed: "Malchance, retard, revers" },
+            "La Force": { upright: "Courage, compassion, maîtrise", reversed: "Faiblesse, manque de confiance, lâcheté" },
+            "Le Pendu": { upright: "Sacrifice, lâcher prise, nouvelle perspective", reversed: "Impasse, sacrifice inutile, entêtement" },
+            "L'Arcane sans Nom (La Mort)": { upright: "Transformation, fin d'un cycle, renouveau", reversed: "Stagnation, peur du changement, résistance" },
+            "Tempérance": { upright: "Équilibre, modération, patience", reversed: "Déséquilibre, excès, impatience" },
+            "Le Diable": { upright: "Attachement, tentation, matérialisme", reversed: "Libération, rupture de chaînes, prise de conscience" },
+            "La Maison Dieu": { upright: "Destruction, révélation soudaine, bouleversement", reversed: "Catastrophe évitée, résistance au changement, perte mineure" },
+            "L'Étoile": { upright: "Espoir, inspiration, sérénité", reversed: "Désespoir, manque d'inspiration, déconnexion" },
+            "La Lune": { upright: "Illusion, intuition, subconscient", reversed: "Clarté, peur surmontée, mensonges exposés" },
+            "Le Soleil": { upright: "Joie, succès, vitalité", reversed: "Manque d'enthousiasme, échec partiel, égocentrisme" },
+            "Le Jugement": { upright: "Renaissance, appel, évaluation", reversed: "Auto-jugement, doute, refus de se libérer" },
+            "Le Monde": { upright: "Accomplissement, plénitude, succès", reversed: "Inachèvement, manque de clôture, imperfection" },
+            "Le Mat": { upright: "Liberté, spontanéité, nouveau chemin", reversed: "Négligence, imprudence, indécision" }
+        };
+
+        // --- Historique des tirages ---
+        const MAX_HISTORY = 5; // Nombre maximum d'éléments à conserver dans l'historique
+        let diceHistory = [];
+        let cardHistory = [];
+        let tarotHistory = [];
+
+        function updateHistoryDisplay(historyArray, historyElementId) {
+            const historyElement = document.getElementById(historyElementId);
+            if (historyArray.length === 0) {
+                historyElement.textContent = `Aucun ${historyElementId.split('-')[0]} récent.`;
+                return;
+            }
+            historyElement.innerHTML = historyArray.map(item => `<div class="history-item">${item}</div>`).join('');
+        }
+
+        function addToHistory(historyArray, item, historyElementId) {
+            historyArray.unshift(item); // Ajoute au début
+            if (historyArray.length > MAX_HISTORY) {
+                historyArray.pop(); // Supprime le plus ancien si la limite est dépassée
+            }
+            updateHistoryDisplay(historyArray, historyElementId);
+        }
+
+        // --- Fonctions de Génération Principales ---
+
+        function generateLikelyOdds() {
+            const selectedOdds = document.querySelector('input[name="odds"]:checked').value;
+            const threshold = oddsThresholds[selectedOdds];
+            const roll = getRandomInt(1, 100);
+            let resultText = `D100 (${roll}) - `;
+
+            if (roll <= threshold) {
+                resultText += "OUI";
+                if (selectedOdds === 'very-likely') resultText += ", et une opportunité se présente.";
+                else if (selectedOdds === 'likely' && roll <= threshold * 0.2) resultText += ", avec un bonus mineur.";
+            } else {
+                resultText += "NON";
+                if (selectedOdds === 'very-unlikely') resultText += ", mais un écho lointain subsiste.";
+                else if (selectedOdds === 'unlikely' && roll >= threshold + (100 - threshold) * 0.8) resultText += ", avec un contretemps mineur.";
+            }
+            document.getElementById('odds-text-result').textContent = resultText;
+        }
+        
+        // Mise à jour de la classe CSS pour l'option de probabilité sélectionnée
+        document.querySelectorAll('.odds-option input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                document.querySelectorAll('.odds-option').forEach(label => label.classList.remove('selected'));
+                radio.closest('.odds-option').classList.add('selected');
+            });
+        });
+
+
+        function rollDice(sides) {
+            const result = getRandomInt(1, sides);
+            document.getElementById('dice-result').textContent = `D${sides}: ${result}`;
+            addToHistory(diceHistory, `D${sides}: ${result}`, 'dice-history');
+        }
+
+        function rollFateDice() {
+            let results = [];
+            let total = 0;
+            for (let i = 0; i < 4; i++) {
+                const roll = getRandomInt(1, 3); // 1, 2, 3
+                if (roll === 1) { // 1 = -
+                    results.push('-');
+                    total--;
+                } else if (roll === 2) { // 2 = 0
+                    results.push('0');
+                } else { // 3 = +
+                    results.push('+');
+                    total++;
+                }
+            }
+            let totalSign = '';
+            if (total > 0) totalSign = ` (+${total})`;
+            else if (total < 0) totalSign = ` (${total})`;
+            else totalSign = ` (0)`;
+
+            const fateResult = `Fate: ${results.join(' ')} ${totalSign}`;
+            document.getElementById('dice-result').textContent = fateResult;
+            addToHistory(diceHistory, fateResult, 'dice-history');
+        }
+
+        function drawPlayingCard() {
+            const suit = getRandomElement(suits);
+            const rank = getRandomElement(ranks);
+            const card = `${rank} de ${suit}`;
+            document.getElementById('card-result').textContent = card;
+            addToHistory(cardHistory, card, 'card-history');
+        }
+
+        function drawTarotCard() {
+            const cardName = getRandomElement(tarotMajorArcana);
+            const isReversed = Math.random() < 0.5; // 50% de chance d'être inversée
+            const interpretation = tarotInterpretations[cardName];
+            
+            let resultText = cardName;
+            let currentInterpretation = "";
+
+            if (isReversed) {
+                resultText += " (Inversée)";
+                currentInterpretation = interpretation.reversed;
+            } else {
+                resultText += " (Droite)";
+                currentInterpretation = interpretation.upright;
+            }
+            
+            document.getElementById('tarot-result').textContent = `${resultText}: ${currentInterpretation}`;
+            addToHistory(tarotHistory, `${resultText}: ${currentInterpretation}`, 'tarot-history');
+        }
+
+
+        function generateGalacticEvent() {
+            document.querySelector('#galactic-focus span:last-child').textContent = getRandomElement(galacticFocus);
+            document.querySelector('#galactic-action span:last-child').textContent = getRandomElement(galacticAction);
+            document.querySelector('#galactic-subject span:last-child').textContent = getRandomElement(galacticSubject);
+        }
+
+        function generateSensoryMood() {
+            document.querySelector('#sense-sound span:last-child').textContent = getRandomElement(senseSounds);
+            document.querySelector('#sense-sight span:last-child').textContent = getRandomElement(senseSights);
+            document.querySelector('#sense-feel span:last-child').textContent = getRandomElement(senseFeels);
+            document.querySelector('#sense-smell span:last-child').textContent = getRandomElement(senseSmells);
+        }
+
+        function generateComplication() {
+            if (!selectedEventLevel) {
+                document.getElementById('complication-text-result').textContent = "Veuillez choisir un niveau d'événement d'abord.";
+                return;
+            }
+
+            const chances = complicationChances[selectedEventLevel];
+            const roll = getRandomInt(1, 100);
+            let cumulativeChance = 0;
+            let chosenComplicationType = '';
+
+            // Déterminer le type de complication basé sur le jet de D100
+            for (const type in chances) {
+                cumulativeChance += chances[type];
+                if (roll <= cumulativeChance) {
+                    chosenComplicationType = type;
+                    break;
+                }
+            }
+
+            if (chosenComplicationType) {
+                const complicationText = getRandomElement(complications[chosenComplicationType]);
+                document.getElementById('complication-text-result').textContent = `${chosenComplicationType}: ${complicationText}`;
+            } else {
+                document.getElementById('complication-text-result').textContent = "Aucune complication déterminée (erreur de logique ou chances = 0 pour tout).";
+            }
+        }
+
+        // Gestion de la sélection des niveaux d'événement
+        document.querySelectorAll('.event-level-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Supprimer la classe 'selected' de tous les boutons
+                document.querySelectorAll('.event-level-button').forEach(btn => btn.classList.remove('selected'));
+                // Ajouter la classe 'selected' au bouton cliqué
+                button.classList.add('selected');
+                selectedEventLevel = button.dataset.level; // Mettre à jour le niveau sélectionné
+                generateComplication(); // Générer une complication dès qu'un niveau est sélectionné
+            });
+        });
+
+        // --- Fonctions de génération pour les Oracles COG étendus ---
+        function generatePlanet() {
+            document.querySelector('#planet-name span:last-child').textContent = getRandomElement(planetNames);
+            document.querySelector('#planet-type span:last-child').textContent = getRandomElement(planetTypes);
+            document.querySelector('#planet-temp span:last-child').textContent = getRandomElement(planetTemperatures);
+            document.querySelector('#planet-atmosphere span:last-child').textContent = getRandomElement(planetAtmospheres);
+            document.querySelector('#planet-gravity span:last-child').textContent = getRandomElement(planetGravities);
+            document.querySelector('#planet-flora-fauna span:last-child').textContent = getRandomElement(planetFloraFauna);
+            document.querySelector('#planet-feature span:last-child').textContent = getRandomElement(planetUniqueFeatures);
+        }
+
+        function generateNPC() {
+            const sex = getRandomElement(sexes);
+            const firstName = (sex === "Homme") ? getRandomElement(maleFirstNames) : getRandomElement(femaleFirstNames);
+            const lastName = getRandomElement(lastNames);
+            document.querySelector('#npc-full-name span:last-child').textContent = firstName + " " + lastName;
+            document.querySelector('#npc-sex span:last-child').textContent = sex;
+            document.querySelector('#npc-race span:last-child').textContent = getRandomElement(races);
+            document.querySelector('#npc-profession span:last-child').textContent = getRandomElement(npcProfessions);
+            document.querySelector('#npc-trait span:last-child').textContent = getRandomElement(npcTraits);
+            document.querySelector('#npc-physique span:last-child').textContent = getRandomElement(npcPhysiques);
+            document.querySelector('#npc-motivation span:last-child').textContent = getRandomElement(npcMotivations);
+        }
+
+        function generateEncounter() {
+            document.querySelector('#encounter-type span:last-child').textContent = getRandomElement(encounterTypes);
+            document.querySelector('#encounter-faction span:last-child').textContent = getRandomElement(factionsInvolved);
+            document.querySelector('#encounter-objective span:last-child').textContent = getRandomElement(encounterObjectives);
+            document.querySelector('#encounter-complication span:last-child').textContent = getRandomElement(encounterComplications);
+            document.querySelector('#encounter-location span:last-child').textContent = getRandomElement(encounterLocations);
+        }
+
+        function generateQuest() {
+            document.querySelector('#quest-type span:last-child').textContent = getRandomElement(questTypes);
+            document.querySelector('#quest-mandate span:last-child').textContent = getRandomElement(questMandates);
+            document.querySelector('#quest-objective span:last-child').textContent = getRandomElement(questObjectives);
+            document.querySelector('#quest-reward span:last-child').textContent = getRandomElement(questRewards);
+            document.querySelector('#quest-obstacle span:last-child').textContent = getRandomElement(questObstacles);
+            document.querySelector('#quest-revelation span:last-child').textContent = getRandomElement(questRevelations);
+        }
+
+        // --- Fonction de relance générale ---
+        function rerollAll() {
+            generateLikelyOdds();
+            rollDice(6); // Relancer le dé par défaut (D6)
+            drawPlayingCard(); // Relancer une carte à jouer
+            drawTarotCard(); // Relancer une carte de tarot
+            generateGalacticEvent();
+            generateSensoryMood();
+            generateComplication(); // Relancer la complication
+
+            // Appeler les fonctions de génération du tab actif
+            const activeTabId = document.querySelector('.tab-content.active').id;
+            if (activeTabId === 'planets') generatePlanet();
+            else if (activeTabId === 'npcs') generateNPC();
+            else if (activeTabId === 'encounters') generateEncounter();
+            else if (activeTabId === 'quests') generateQuest();
+        }
+
+        // --- Fonctions pour les Onglets ---
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+
+            // Masquer tout le contenu des onglets
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            // Désactiver tous les boutons d'onglet
+            tablinks = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            // Afficher le contenu de l'onglet courant et marquer le bouton comme actif
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+
+            // Relancer les générateurs du nouvel onglet actif lors du changement
+            if (tabName === 'planets') generatePlanet();
+            else if (tabName === 'npcs') generateNPC();
+            else if (tabName === 'encounters') generateEncounter();
+            else if (tabName === 'quests') generateQuest();
+        }
+
+        // Initialiser les générateurs au chargement de la page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialiser les probabilités avec le premier radio bouton sélectionné par défaut
+            document.querySelector('.odds-option input[value="very-unlikely"]').checked = true;
+            document.querySelector('.odds-option.selected')?.classList.remove('selected'); // Supprime si déjà là
+            document.querySelector('.odds-option input[value="very-unlikely"]').closest('.odds-option').classList.add('selected');
+
+            generateLikelyOdds();
+            rollDice(6); // Initialiser le dé D6
+            drawPlayingCard(); // Initialiser le tirage de carte
+            drawTarotCard(); // Initialiser le tirage de tarot
+            generateGalacticEvent();
+            generateSensoryMood();
+            
+            // Initialiser le premier bouton de niveau d'événement comme sélectionné
+            const firstEventLevelButton = document.querySelector('.event-level-button');
+            if (firstEventLevelButton) {
+                firstEventLevelButton.classList.add('selected');
+                selectedEventLevel = firstEventLevelButton.dataset.level;
+                generateComplication(); // Générer la première complication
+            }
+
+            // Initialiser le contenu du premier onglet actif (Planètes)
+            generatePlanet();
+
+            // Initialiser l'affichage de l'historique
+            updateHistoryDisplay(diceHistory, 'dice-history');
+            updateHistoryDisplay(cardHistory, 'card-history');
+            updateHistoryDisplay(tarotHistory, 'tarot-history');
+        });
+    </script>
+</body>
+</html>
